@@ -1,23 +1,22 @@
 -- Audit Logs Migration
--- Creates immutable audit log table for FERPA/GDPR compliance
+-- audit_logs table already exists in 001_init.sql
+-- This migration adds additional columns and enhancements
 
-CREATE TABLE IF NOT EXISTS audit_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  action VARCHAR(100) NOT NULL,
-  resource_type VARCHAR(50) NOT NULL,
-  resource_id UUID,
-  details JSONB,
-  ip_address INET,
-  user_agent TEXT,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
+-- Add details column if it doesn't exist
+ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS details JSONB;
 
--- Create indexes for common query patterns
-CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_resource ON audit_logs(resource_type, resource_id);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+-- Create or replace indexes for common query patterns
+DROP INDEX IF EXISTS idx_audit_logs_user_id;
+CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
+
+DROP INDEX IF EXISTS idx_audit_logs_action;
+CREATE INDEX idx_audit_logs_action ON audit_logs(action);
+
+DROP INDEX IF EXISTS idx_audit_logs_resource;
+CREATE INDEX idx_audit_logs_resource ON audit_logs(resource_type, resource_id);
+
+DROP INDEX IF EXISTS idx_audit_timestamp;
+CREATE INDEX idx_audit_timestamp ON audit_logs(timestamp);
 
 -- Comment for documentation
 COMMENT ON TABLE audit_logs IS 'Immutable audit log for compliance. No UPDATE or DELETE allowed.';
