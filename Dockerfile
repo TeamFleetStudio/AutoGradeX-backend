@@ -19,7 +19,8 @@ RUN apk add --no-cache dumb-init curl
 
 # Copy from builder
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app . .
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/src ./src
 
 # Create uploads directory
 RUN mkdir -p ./uploads
